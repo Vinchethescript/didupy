@@ -1,13 +1,58 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
 from typing import Tuple
-from datetime import date
-from typing import Union, Optional
+from datetime import date as Date
+from typing import Union, Optional, Sequence, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .dashboard import Dashboard
+
+
+def _make_repr(self, **kwargs) -> str:
+    args = ", ".join(f"{k}={v!r}" for k, v in kwargs.items())
+    return f"{type(self).__name__}({args})"
 
 
 @dataclass(frozen=True)
-class SchoolData:
+class CommonObject:
+    pk: str
+
+
+@dataclass(frozen=True)
+class SubjectGrades:
+    num: int
+    sum: float
+    avg: float
+
+
+@dataclass(frozen=True)
+class SubjectAverages:
+    oral: SubjectGrades
+    written: SubjectGrades
+    total: SubjectGrades
+    grades: int
+
+    def __int__(self) -> int:
+        return self.grades
+
+    def __float__(self) -> float:
+        return self.total.avg
+
+    def __repr__(self) -> str:
+        return _make_repr(
+            self,
+            grades=self.grades,
+            oral=self.oral.avg,
+            written=self.written.avg,
+            total=self.total.avg,
+        )
+
+
+@dataclass(frozen=True)
+class SchoolData(CommonObject):
     name: str
-    year: Tuple[date, date]
+    year: Tuple[Date, Date]
     class_: Union[int, str]
     section: str
     course: str
@@ -21,7 +66,7 @@ class UserResidenceData:
 
 
 @dataclass(frozen=True)
-class UserData:
+class UserData(CommonObject):
     last_class: bool
     full_name: str
     first_name: str
@@ -31,7 +76,7 @@ class UserData:
     cell: Optional[str]
     fiscal_code: str
     gender: str
-    birth_date: date
+    birth_date: Date
     birth_place: str
     citizenship: str
     residence: UserResidenceData
@@ -90,26 +135,166 @@ class DashboardOptions(ProfileOptions):
 
 
 @dataclass(frozen=True)
-class Subject:
-    shortcut: str
-    scrutinizable: bool
-    code: str
-    counts_towards_avg: bool
-    name: str
-    pk: str
+class Teacher(CommonObject):
+    first_name: str
+    last_name: str
+    email: str
+    subjects: Sequence[Union["SubjectType", str]]  # str for missing subject data
+
+    @property
+    def full_name(self) -> str:
+        return f"{self.last_name} {self.first_name}"
 
     def __repr__(self) -> str:
-        return f"Subject(code={self.code!r}, shortcut={self.shortcut!r})"
+        return _make_repr(
+            self,
+            full_name=self.full_name,
+            subjects=self.subjects,
+        )
+
+    def __str__(self) -> str:
+        return self.full_name
 
 
 @dataclass(frozen=True)
-class Period:
-    pk: str
-    start_date: date
+class PartialSubject(CommonObject):
+    shortcut: str
+    scrutinizable: bool
+    type: str
+    counts_towards_avg: bool
+    name: str
+    dashboard: "Dashboard"
+    averages: SubjectAverages
+
+    def __repr__(self) -> str:
+        return _make_repr(
+            self,
+            shortcut=self.shortcut,
+            type=self.type,
+        )
+
+    def __str__(self) -> str:
+        return self.name
+
+    @property
+    def grades(self) -> Sequence["Grade"]:
+        full = self.dashboard.grades
+
+        return list(
+            filter(
+                lambda g: isinstance(g.subject, PartialSubject)
+                and g.subject.pk == self.pk,
+                full,
+            )
+        )
+
+    @property
+    def teachers(self) -> Sequence[Teacher]:
+        full = self.dashboard.teachers
+        ret = []
+        for teacher in full:
+            for subject in teacher.subjects:
+                if isinstance(subject, PartialSubject) and subject.pk == self.pk:
+                    ret.append(teacher)
+                    break
+
+        return ret
+
+
+@dataclass(frozen=True)
+class Subject(PartialSubject):
+    code: str
+    ministerial_code: str
+    description: Optional[str]
+    has_failing_grades: bool
+    has_individual_lessons: bool
+    full_name: str
+    kind: str
+    id: str
+
+    def __repr__(self) -> str:
+        return _make_repr(
+            self,
+            shortcut=self.shortcut,
+            type=self.type,
+            code=self.code,
+        )
+
+    def __str__(self) -> str:
+        return self.full_name
+
+
+@dataclass(frozen=True)
+class Period(CommonObject):
+    start_date: Date
     name: str
     one_grade: bool
     avg: float
     is_avg: bool
-    end_date: date
+    end_date: Date
     code: str
     is_final: bool
+    dashboard: "Dashboard"
+
+    def __repr__(self) -> str:
+        return _make_repr(
+            self,
+            name=self.name,
+            start_date=self.start_date,
+            end_date=self.end_date,
+        )
+
+    def __str__(self) -> str:
+        return self.name
+
+    @property
+    def grades(self) -> Sequence["Grade"]:
+        full = self.dashboard.grades
+
+        return list(
+            filter(
+                lambda g: g.period.pk == self.pk,
+                full,
+            )
+        )
+
+
+@dataclass(frozen=True)
+class Grade(CommonObject):
+    created_at: Date
+    """When the grade was added to the system"""
+
+    period: Period
+    label: str
+    big_label: str
+    value: Union[float, int]
+    # find out what codVotoPratico means
+    # ignore docente as we get its pk later
+    subject: PartialSubject
+    # find out what tipoValutazione means
+    # find out what prgVoto means
+    # find out what operazione means
+    description: str
+    # find out what faMenoMedia means
+    teacher: Teacher  # implement
+    comment: str
+
+    date: Date
+    """Date of the grade (might be different from created_at)"""
+
+    # find out what numMedia means
+
+    def __repr__(self) -> str:
+        return _make_repr(
+            self,
+            subject=self.subject,
+            label=self.label,
+            value=self.value,
+            date=self.date,
+        )
+
+    def __str__(self) -> str:
+        return f"{self.subject.shortcut}: {self.label}"
+
+
+SubjectType = Union[Subject, PartialSubject]

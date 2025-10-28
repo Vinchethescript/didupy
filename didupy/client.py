@@ -291,7 +291,10 @@ class DidUPClient:
                 if content.get("success", True) is False:
                     raise ResponseError(
                         status_code=response.status,
-                        message=content.get("msg", "Error in response from server"),
+                        message=content.get(
+                            "msg",
+                            content.get("message", "Error in response from server"),
+                        ),
                     )
             except aiohttp.ContentTypeError:
                 content = (await response.content.read()).decode()

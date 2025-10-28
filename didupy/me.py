@@ -47,34 +47,36 @@ class Me:
             classe_num = classe["desDenominazione"]
 
         self.__school = SchoolData(
-            name=profile["data"]["scheda"]["scuola"]["descrizione"],
+            name=scheda["scuola"]["descrizione"],
             year=(
-                date.fromisoformat(profile["data"]["anno"]["dataInizio"]),
-                date.fromisoformat(profile["data"]["anno"]["dataFine"]),
+                date.fromisoformat(data["anno"]["dataInizio"]),
+                date.fromisoformat(data["anno"]["dataFine"]),
             ),
             class_=classe_num,
             section=classe["desSezione"],
             course=scheda["corso"]["descrizione"],
+            pk=scheda["scuola"]["pk"],
         )
+        alunno = data["alunno"]
+        alunno_det = profile_detail["data"]["alunno"]
         self.__user = UserData(
-            last_class=data["alunno"]["isUltimaClasse"],
-            full_name=data["alunno"]["nominativo"],
-            first_name=data["alunno"]["nome"],
-            last_name=data["alunno"]["cognome"],
-            above_18=data["alunno"]["maggiorenne"],
-            email=data["alunno"]["desEmail"],
-            cell=profile_detail["data"]["alunno"]["desCellulare"],
-            fiscal_code=profile_detail["data"]["alunno"]["desCf"],
-            gender=profile_detail["data"]["alunno"]["sesso"],
-            birth_date=date.fromisoformat(
-                profile_detail["data"]["alunno"]["datNascita"]
-            ),
-            birth_place=profile_detail["data"]["alunno"]["desComuneNascita"],
-            citizenship=profile_detail["data"]["alunno"]["cittadinanza"],
+            pk=alunno["pk"],
+            last_class=alunno["isUltimaClasse"],
+            full_name=alunno["nominativo"],
+            first_name=alunno["nome"],
+            last_name=alunno["cognome"],
+            above_18=alunno["maggiorenne"],
+            email=alunno["desEmail"],
+            cell=alunno_det["desCellulare"],
+            fiscal_code=alunno_det["desCf"],
+            gender=alunno_det["sesso"],
+            birth_date=date.fromisoformat(alunno_det["datNascita"]),
+            birth_place=alunno_det["desComuneNascita"],
+            citizenship=alunno_det["cittadinanza"],
             residence=UserResidenceData(
-                address=profile_detail["data"]["alunno"]["desIndirizzoRecapito"],
-                postal_code=profile_detail["data"]["alunno"]["desCapResidenza"],
-                city=profile_detail["data"]["alunno"]["desComuneResidenza"],
+                address=alunno_det["desIndirizzoRecapito"],
+                postal_code=alunno_det["desCapResidenza"],
+                city=alunno_det["desComuneResidenza"],
             ),
         )
 

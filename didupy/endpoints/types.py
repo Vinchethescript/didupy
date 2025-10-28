@@ -13,10 +13,17 @@ ArgoRequestHeaders = TypedDict(
 )
 
 
-class ArgoResponse(TypedDict):
+class ArgoResponseBase(TypedDict):
     success: bool
     msg: None | str
+
+
+class ArgoResponse(ArgoResponseBase):
     data: Any
+
+
+class CommonData(TypedDict):
+    pk: str
 
 
 # ======== Profilo ========
@@ -28,37 +35,33 @@ class AnnoProfilo(TypedDict):
     dataFine: str
 
 
-class AlunnoProfilo(TypedDict):
+class AlunnoProfilo(CommonData):
     isUltimaClasse: bool
     nominativo: str
     cognome: str
     nome: str
-    pk: str
     maggiorenne: bool
     desEmail: str
 
 
-class ClasseProfilo(TypedDict):
-    pk: str
+class ClasseProfilo(CommonData):
     desDenominazione: str
     desSezione: str
 
 
-class CorsoProfilo(TypedDict):
+class CorsoProfilo(CommonData):
     descrizione: str
-    pk: str
 
 
 class ScuolaProfilo(CorsoProfilo):
     desOrdine: str
 
 
-class SchedaProfilo(TypedDict):
+class SchedaProfilo(CommonData):
     classe: ClasseProfilo
     corso: CorsoProfilo
     sede: CorsoProfilo
     scuola: ScuolaProfilo
-    pk: str
 
 
 class ProfiloResponseData(TypedDict):
@@ -127,13 +130,25 @@ class Opzione(TypedDict):
     chiave: str
 
 
-class Materia(TypedDict):
+class Materia(CommonData):
     abbreviazione: str
     scrut: bool
     codTipo: str
     faMedia: bool
     materia: str
-    pk: str
+
+
+class MediaMateria(TypedDict):
+    mediaMateria: float
+    mediaOrale: float
+    mediaScritta: float
+    numValori: int
+    numValutazioniOrale: int
+    numValutazioniScritto: int
+    numVoti: int
+    sommaValutazioniOrale: float
+    sommaValutazioniScritto: float
+    sumValori: float
 
 
 class Periodo(TypedDict):
@@ -148,15 +163,14 @@ class Periodo(TypedDict):
     isScrutinioFinale: bool
 
 
-class BachecaAllegato(TypedDict):
+class BachecaAllegato(CommonData):
     nomeFile: str
     path: str
     descrizioneFile: str
-    pk: str
     url: str
 
 
-class BachecaEntry(TypedDict):
+class BachecaEntry(CommonData):
     datEvento: str
     messaggio: str
     data: str
@@ -170,7 +184,6 @@ class BachecaEntry(TypedDict):
     adRichiesta: bool
     isPresaVisione: bool
     dataConfermaAdesione: str
-    pk: str
     listaAllegati: list[BachecaAllegato]
     dataScadAdesione: None | str
     isPresaAdesioneConfermata: bool
@@ -181,11 +194,10 @@ class FileCondivisi(TypedDict):
     listaFile: list
 
 
-class DocenteClasse(TypedDict):
+class DocenteClasse(CommonData):
     desCognome: str
     materie: list[str]
     desNome: str
-    pk: str
     desEmail: str
 
 
@@ -208,7 +220,7 @@ class Compito(TypedDict):
     dataConsegna: str
 
 
-class RegistroEntry(TypedDict):
+class RegistroEntry(CommonData):
     datEvento: str
     isFirmato: bool
     compiti: list[Compito]
@@ -219,12 +231,11 @@ class RegistroEntry(TypedDict):
     pkDocente: str
     datGiorno: str
     materia: str
-    pk: str
     attivita: str
     ora: int
 
 
-class AppelloEntry(TypedDict):
+class AppelloEntry(CommonData):
     operazione: str
     datEvento: str
     descrizione: str
@@ -234,32 +245,103 @@ class AppelloEntry(TypedDict):
     codEvento: str
     docente: str
     commentoGiustificazione: str
-    pk: str
     dataGiustificazione: str
     nota: str
 
 
-class DashboardResponseDatum(TypedDict):
+class Promemoria(CommonData):
+    operazione: str
+    datEvento: str
+    desAnnotazioni: str
+    pkDocente: str
+    flgVisibileFamiglia: str
+    datGiorno: str
+    docente: str
+    oraInizio: str
+    oraFine: str
+
+
+class ScuMateriaPK(TypedDict):
+    codMin: str
+    prgScuola: int
+    numAnno: int
+    prgMateria: int
+
+
+class MateriaLight(TypedDict):
+    scumateriaPK: ScuMateriaPK
+    codMateria: str
+    desDescrizione: str
+    desDescrAbbrev: str
+    codSuddivisione: str
+    codTipo: str
+    flgConcorreMedia: str
+    codAggrDisciplina: None | str
+    flgLezioniIndividuali: None | str
+    codAggrInvalsi: None | str
+    codMinisteriale: str
+    icona: str
+    descrizione: None | str
+    conInsufficienze: bool
+    selezionata: bool
+    tipoOnGrid: str
+    prgMateria: int
+    articolata: str
+    tipo: str
+    lezioniIndividuali: bool
+    codEDescrizioneMateria: str
+    idmateria: str
+
+
+class Voto(CommonData):
+    datEvento: str
+    pkPeriodo: str
+    codCodice: str
+    valore: float
+    codVotoPratico: str
+    docente: str
+    pkMateria: str
+    tipoValutazione: None | str
+    prgVoto: int
+    operazione: str
+    descrizioneProva: str
+    faMenoMedia: str
+    pkDocente: str
+    descrizioneVoto: str
+    codTipo: str
+    datGiorno: str
+    mese: int
+    numMedia: float
+    materiaLight: MateriaLight
+    desMateria: str
+    desCommento: str
+
+
+class DashboardResponseDatum(CommonData):
     fuoriClasse: list
     msg: str
     opzioni: list[Opzione]
     mediaGenerale: float
     mediaPerMese: dict[str, float]
+    mediaPerPeriodo: dict[str, float]
+    mediaMaterie: dict[str, MediaMateria]
     listaMaterie: list[Materia]
     rimuoviDatiLocali: bool
     listaPeriodi: list[Periodo]
-    promemoria: list  # TODO: define
+    promemoria: list[Promemoria]
     bacheca: list[BachecaEntry]
+    bachecaAlunno: list[BachecaEntry]
     fileCondivisi: FileCondivisi
-    voti: list  # TODO: define
+    voti: list[Voto]
     ricaricaDati: bool
     listaDocentiClasse: list[DocenteClasse]
+    appello: list[AppelloEntry]
+    profiloDisabilitato: bool
     autocertificazione: Autocertificazione
     registro: list[RegistroEntry]
     schede: list  # TODO: define
     prenotazioniAlunni: list
     noteDisciplinari: list
-    pk: str
     classiExtra: bool
 
 
@@ -274,14 +356,13 @@ class DashboardResponse(ArgoResponse):
 # ======== Orario giorno ========
 
 
-class OrarioGiornoEntry(TypedDict):
+class OrarioGiornoEntry(CommonData):
     numOra: int
     mostra: bool
     desCognome: str
     desNome: str
     docente: str
     materia: str
-    pk: str
     scuAnagrafePK: str
     desDenominazione: str
     desEmail: str
@@ -327,13 +408,9 @@ class CurriculumResponse(ArgoResponse):
 
 
 # ======== Other Endpoints ========
-class DownloadBachecaResponse(ArgoResponse):
+class DownloadBachecaResponse(ArgoResponseBase):
     url: str
 
 
-class PresaVisioneAdesioneResponse(ArgoResponse):
+class PresaVisioneAdesioneResponse(ArgoResponseBase):
     pass
-
-
-del DownloadBachecaResponse.__annotations__["data"]
-del PresaVisioneAdesioneResponse.__annotations__["data"]
