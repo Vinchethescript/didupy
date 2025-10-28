@@ -25,7 +25,7 @@ setup(
     long_description=long_desc,
     long_description_content_type="text/markdown",
     packages=packages,
-    install_requires=["aiohttp", "appdirs", "bcrypt", "typing-extensions", "diskcache"],
-    python_requires=">=3.7",
+    install_requires=["aiohttp", "appdirs", "bcrypt", "typing-extensions", "diskcache", "pytz"],
+    python_requires=">=3.11",
     **kwargs
 )

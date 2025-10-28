@@ -361,12 +361,21 @@ class Dashboard:
         for grd in data["voti"]:
             subj = self._get_subject(grd["pkMateria"], data)
             if subj is None:
+                # should not happen
                 continue
 
             teacher = (
                 self._get_teacher(grd["pkDocente"], data) if grd["pkDocente"] else None
             )
             if teacher is None:
+                # don't think this is gonna happen
+                continue
+
+            period = list(
+                filter(lambda x: x.pk == grd["pkPeriodo"], self.periods)
+            )
+            if not period:
+                # this ain't happening anyway (????????????)
                 continue
 
             self.__grades.append(
@@ -374,9 +383,7 @@ class Dashboard:
                     pk=grd["pk"],
                     created_at=date.fromisoformat(grd["datEvento"]),
                     date=date.fromisoformat(grd["datGiorno"]),
-                    period=list(
-                        filter(lambda x: x.pk == grd["pkPeriodo"], self.periods)
-                    ).pop(),
+                    period=period.pop(),
                     label=grd["codCodice"],
                     big_label=grd["descrizioneVoto"],
                     value=grd["valore"],

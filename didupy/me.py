@@ -13,7 +13,7 @@ class Me:
         self.__options: Dict[str, bool] = {}
         self.__user = None
         self.__school = None
-        self.__user_pk = ""
+        self.__user_pk = None
         self.__dashboard = None
 
     async def _fill_data(self, mobile_login: dict):
@@ -29,9 +29,11 @@ class Me:
 
         self.__mobile_token = data["token"]
         self.__options = {a["chiave"]: a["valore"] for a in data.get("opzioni", [])}
+
+        await self.fetch()
+
         self.__dashboard = Dashboard(self.client)
         await self.__dashboard.fetch()
-        await self.fetch()
 
     async def fetch(self):
         profile = await self.client.endpoints.profilo()

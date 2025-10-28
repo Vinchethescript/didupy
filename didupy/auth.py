@@ -1,6 +1,6 @@
 from types import SimpleNamespace
 from typing import Optional, Mapping, Any, Iterable, Union
-from urllib.parse import urljoin, urlsplit
+from urllib.parse import urljoin, urlsplit, parse_qsl
 
 import aiohttp
 from aiohttp.client import (
@@ -179,11 +179,7 @@ class ArgoLoginHandler:
             raise DidUPyError(f"Failed to initiate OAuth2 login: {resp1.status}")
 
         query_params = dict(
-            [
-                part.split("=")
-                for part in urlsplit(str(resp1.url)).query.split("&")
-                if "=" in part
-            ]
+            parse_qsl(urlsplit(str(resp1.url)).query)
         )
         challenge = query_params.get("login_challenge")
 

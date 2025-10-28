@@ -188,13 +188,18 @@ class DidUPClient:
         read_bufsize: Optional[int] = None,
     ) -> DidUPyResponse:
 
-        if (
-            self.token is None
-            or self.me is None
-            or self.expires_at is None
-            or datetime.now(timezone("Europe/Rome")) >= self.expires_at
-        ):
+        try:
+            self.me
+        except ValueError:
             await self.login()
+        else:
+            if (
+                self.me is None
+                or self.token is None
+                or self.expires_at is None
+                or datetime.now(timezone("Europe/Rome")) >= self.expires_at
+            ):
+                await self.login()
 
         if not endpoint.startswith(self.BASE_URL):
             if urlsplit(endpoint).scheme:
