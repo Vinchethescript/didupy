@@ -1,12 +1,19 @@
 from __future__ import annotations
 
+from enum import Enum
 from dataclasses import dataclass
 from typing import Tuple
-from datetime import date as Date
+from datetime import date as Date, time
 from typing import Union, Optional, Sequence, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .dashboard import Dashboard
+
+
+class AbsenceType(Enum):
+    absence = "A"
+    # TODO: find out other event codes
+    # THIS MIGHT BREAK UNTIL COMPLETED
 
 
 def _make_repr(self, **kwargs) -> str:
@@ -236,6 +243,16 @@ class Period(CommonObject):
     is_final: bool
     dashboard: "Dashboard"
 
+    @property
+    def start(self) -> Date:
+        """Alias for start_date"""
+        return self.start_date
+
+    @property
+    def end(self) -> Date:
+        """Alias for end_date"""
+        return self.end_date
+
     def __repr__(self) -> str:
         return _make_repr(
             self,
@@ -251,12 +268,13 @@ class Period(CommonObject):
     def grades(self) -> Sequence["Grade"]:
         full = self.dashboard.grades
 
-        return list(
-            filter(
-                lambda g: g.period.pk == self.pk,
-                full,
-            )
-        )
+        return [grade for grade in full if grade.period.pk == self.pk]
+
+    @property
+    def register(self) -> Sequence["Day"]:
+        full = self.dashboard.register
+
+        return [day for day in full if day.period.pk == self.pk]
 
 
 @dataclass(frozen=True)
@@ -295,6 +313,119 @@ class Grade(CommonObject):
 
     def __str__(self) -> str:
         return f"{self.subject.shortcut}: {self.label}"
+
+
+@dataclass(frozen=True)
+class Reminder(CommonObject):
+    date: Date
+    start_time: time
+    end_time: time
+    teacher: Teacher
+    note: str
+
+    def __str__(self) -> str:
+        return f"{self.teacher.full_name}: {self.note} [{self.date} {self.start_time}-{self.end_time}]"
+
+    @property
+    def start(self):
+        """Alias for start_time"""
+        return self.start_time
+
+    @property
+    def end(self):
+        """Alias for end_time"""
+        return self.end_time
+
+
+@dataclass(frozen=True)
+class Justification:
+    date: Date
+    comment: str
+
+    def __str__(self) -> str:
+        return self.comment
+
+
+@dataclass(frozen=True)
+class AbsenceEvent(CommonObject):
+    date: Date
+    type: AbsenceType
+    justifiable: bool
+    teacher_name: str
+    note: str
+    description: str
+    justification: Optional[Justification]
+
+    def __repr__(self) -> str:
+        return _make_repr(
+            self,
+            type=self.type,
+            date=self.date,
+            teacher=self.teacher_name,
+            justification=self.justification,
+        )
+
+
+@dataclass(frozen=True)
+class HomeworkAssigned:
+    text: str
+    date: Date
+    due_date: Date
+    teacher: Teacher
+    subject: Union[SubjectType, str]
+
+    def __repr__(self) -> str:
+        return _make_repr(
+            self,
+            subject=self.subject,
+            date=self.date,
+            due_date=self.due_date,
+        )
+
+    def __str__(self) -> str:
+        return self.text
+
+
+@dataclass(frozen=True)
+class DayEvent(CommonObject):
+    date: Date
+    teacher: Teacher
+    subject: Union[SubjectType, str]
+    url: Optional[str]
+    activity: str
+    signed: bool
+    hour: int
+    homework: Sequence[HomeworkAssigned]
+
+    def __repr__(self) -> str:
+        return _make_repr(
+            self,
+            signed=self.signed,
+            subject=self.subject,
+            date=self.date,
+            hour=self.hour,
+            activity=self.activity,
+        )
+
+
+@dataclass(frozen=True)
+class Day:
+    date: Date
+    period: Period
+    absence: Optional[AbsenceEvent]
+    grades: Sequence[Grade]
+    reminders: Sequence[Reminder]
+    events: Sequence[DayEvent]
+    homework: Sequence[HomeworkAssigned]
+
+    def __repr__(self) -> str:
+        return _make_repr(
+            self,
+            date=self.date,
+            absence=self.absence,
+            events=self.events,
+            homework=self.homework,
+        )
 
 
 SubjectType = Union[Subject, PartialSubject]

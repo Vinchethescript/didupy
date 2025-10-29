@@ -178,9 +178,7 @@ class ArgoLoginHandler:
         if resp1.status != 200:
             raise DidUPyError(f"Failed to initiate OAuth2 login: {resp1.status}")
 
-        query_params = dict(
-            parse_qsl(urlsplit(str(resp1.url)).query)
-        )
+        query_params = dict(parse_qsl(urlsplit(str(resp1.url)).query))
         challenge = query_params.get("login_challenge")
 
         if not challenge:

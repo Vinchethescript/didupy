@@ -1,5 +1,5 @@
 import io
-from datetime import date
+from datetime import date, time
 from typing import Union, BinaryIO, Optional
 from .dataclasses import (
     DashboardOptions,
@@ -11,6 +11,13 @@ from .dataclasses import (
     SubjectAverages,
     SubjectGrades,
     SubjectType,
+    Reminder,
+    AbsenceEvent,
+    AbsenceType,
+    Justification,
+    DayEvent,
+    HomeworkAssigned,
+    Day,
 )
 from .endpoints.types import (
     BachecaEntry,
@@ -104,6 +111,8 @@ class InboxItem:
             ItemAttachment(client, att) for att in data["listaAllegati"]
         ]
 
+        self.__homework = None
+
     @property
     def pk(self) -> str:
         return self.__data["pk"]
@@ -179,6 +188,10 @@ class Dashboard:
         self.__other_options = None
         self.__periods = None
         self.__inbox = None
+        self.__reminders = None
+        self.__absences = None
+        self.__homework = None
+        self.__register = None
 
     def _get_subject(self, pk: str, data: Optional[DashboardResponseDatum] = None):
         if data is None or self.__subjects is None:
@@ -371,9 +384,7 @@ class Dashboard:
                 # don't think this is gonna happen
                 continue
 
-            period = list(
-                filter(lambda x: x.pk == grd["pkPeriodo"], self.periods)
-            )
+            period = list(filter(lambda x: x.pk == grd["pkPeriodo"], self.periods))
             if not period:
                 # this ain't happening anyway (????????????)
                 continue
@@ -422,6 +433,101 @@ class Dashboard:
         self.__other_options = opts
 
         self.__inbox = [InboxItem(self.client, entry) for entry in data["bacheca"]]
+
+        self.__reminders = [
+            Reminder(
+                pk=rem["pk"],
+                date=date.fromisoformat(rem["datGiorno"]),
+                start_time=time.fromisoformat(rem["oraInizio"]),
+                end_time=time.fromisoformat(rem["oraFine"]),
+                teacher=self._get_teacher(rem["pkDocente"], data),
+                note=rem["desAnnotazioni"],
+            )
+            for rem in data.get("promemoria", [])
+        ]
+
+        self.__absences = [
+            AbsenceEvent(
+                pk=absc["pk"],
+                date=date.fromisoformat(absc["data"]),
+                type=AbsenceType(absc["codEvento"]),
+                justifiable=absc["daGiustificare"],
+                teacher_name=absc["docente"] or "",
+                note=absc["nota"] or "",
+                description=absc["descrizione"] or "",
+                justification=(
+                    Justification(
+                        date=date.fromisoformat(absc["dataGiustificazione"]),
+                        comment=absc["commentoGiustificazione"],
+                    )
+                    if absc.get("giustificata", "N") == "S"
+                    else None
+                ),
+            )
+            for absc in data.get("appello", [])
+        ]
+
+        self.__homework = []
+
+        events = {}
+        for item in data["registro"]:
+            _date = item["datGiorno"]
+            teacher = self._get_teacher(item["pkDocente"], data)
+            subject = self._get_subject(item["pkMateria"], data)
+            date_ = date.fromisoformat(_date)
+            hw = [
+                HomeworkAssigned(
+                    text=h["compito"],
+                    date=date_,
+                    due_date=date.fromisoformat(h["dataConsegna"]),
+                    teacher=teacher,
+                    subject=subject if subject else item["materia"],
+                )
+                for h in item.get("compiti", [])
+            ]
+
+            evt = DayEvent(
+                pk=item["pk"],
+                date=date_,
+                teacher=teacher,
+                subject=subject if subject else item["materia"],
+                url=item.get("url", None),
+                activity=item["attivita"],
+                signed=item["isFirmato"],
+                hour=item["ora"],
+                homework=hw,
+            )
+
+            self.__homework.extend(hw)
+            if _date not in events:
+                events[_date] = []
+
+            events[_date].append(evt)
+
+        self.__register = []
+        for _date, evts in events.items():
+            date_ = date.fromisoformat(_date)
+            period = list(
+                filter(lambda x: x.start_date <= date_ <= x.end_date, self.periods)
+            )
+            if not period:
+                continue
+
+            period = period[0]
+            absence = list(filter(lambda x: x.date == date_, self.absences))
+            absence = absence[0] if absence else None
+
+            self.__register.append(
+                Day(
+                    date=date_,
+                    period=period,
+                    absence=absence,
+                    grades=[g for g in self.grades if g.date == date_],
+                    reminders=[r for r in self.reminders if r.date == date_],
+                    events=evts,
+                    homework=[hw for hw in self.homework if hw.date == date_],
+                )
+            )
 
         return self
 
@@ -476,9 +582,11 @@ class Dashboard:
         return self.__inbox
 
     @property
-    def reminders(self) -> list:
-        # promemoria
-        raise NotImplementedError
+    def reminders(self) -> list[Reminder]:
+        if self.__reminders is None:
+            raise ValueError("Dashboard data not filled. Log in first.")
+
+        return self.__reminders
 
     @property
     def shared_files(self) -> list:
@@ -500,9 +608,35 @@ class Dashboard:
         return self.__teachers
 
     @property
-    def absences(self):
-        # appello
-        raise NotImplementedError
+    def absences(self) -> list[AbsenceEvent]:
+        if self.__absences is None:
+            raise ValueError("Dashboard data not filled. Log in first.")
+
+        return self.__absences
+
+    @property
+    def homework(self) -> list[HomeworkAssigned]:
+        if self.__homework is None:
+            raise ValueError("Dashboard data not filled. Log in first.")
+
+        return self.__homework
+
+    @property
+    def assigned_homework(self) -> list[HomeworkAssigned]:
+        today = date.today()
+        return [hw for hw in self.homework if hw.due_date >= today]
+
+    @property
+    def past_homework(self) -> list[HomeworkAssigned]:
+        today = date.today()
+        return [hw for hw in self.homework if hw.due_date < today]
+
+    @property
+    def register(self) -> list[Day]:
+        if self.__register is None:
+            raise ValueError("Dashboard data not filled. Log in first.")
+
+        return self.__register
 
     def __repr__(self):
         ret = [f"<{type(self).__name__}"]
