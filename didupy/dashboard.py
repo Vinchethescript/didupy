@@ -525,7 +525,7 @@ class Dashboard:
                     grades=[g for g in self.grades if g.date == date_],
                     reminders=[r for r in self.reminders if r.date == date_],
                     events=evts,
-                    homework=[hw for hw in self.homework if hw.date == date_],
+                    homework=[hw for hw in self.homework if hw.due_date == date_],
                 )
             )
 
