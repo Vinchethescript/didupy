@@ -505,7 +505,14 @@ class Dashboard:
             events[_date].append(evt)
 
         self.__register = []
-        for _date, evts in events.items():
+        dates = set(events.keys())
+        for g in self.grades:
+            dates.add(g.date.isoformat())
+
+        for r in self.reminders:
+            dates.add(r.date.isoformat())
+
+        for _date in dates:
             date_ = date.fromisoformat(_date)
             period = list(
                 filter(lambda x: x.start_date <= date_ <= x.end_date, self.periods)
@@ -524,10 +531,12 @@ class Dashboard:
                     absence=absence,
                     grades=[g for g in self.grades if g.date == date_],
                     reminders=[r for r in self.reminders if r.date == date_],
-                    events=evts,
+                    events=events.get(_date, []),
                     homework=[hw for hw in self.homework if hw.due_date == date_],
                 )
             )
+
+        self.__register.sort(key=lambda x: x.date)
 
         return self
 
