@@ -140,6 +140,9 @@ class DashboardOptions(ProfileOptions):
     asl: bool
     wsm: bool
 
+@dataclass(frozen=True)
+class PartialTeacher(CommonObject):
+    name: str
 
 @dataclass(frozen=True)
 class Teacher(CommonObject):

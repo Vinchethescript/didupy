@@ -18,6 +18,7 @@ from .dataclasses import (
     DayEvent,
     HomeworkAssigned,
     Day,
+    PartialTeacher
 )
 from .endpoints.types import (
     BachecaEntry,
@@ -313,7 +314,11 @@ class Dashboard:
 
         teacher = list(filter(lambda x: x["pk"] == pk, data["listaDocentiClasse"]))
         if not teacher:
-            raise ValueError(f"Teacher with pk {pk} not found")
+            return PartialTeacher(
+                pk=pk,
+                name="Unknown"
+            ) # to be typed properly
+            #raise ValueError(f"Teacher with pk {pk} not found")
 
         teacher = teacher[0]
         subjects = []
