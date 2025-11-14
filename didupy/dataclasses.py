@@ -12,6 +12,7 @@ if TYPE_CHECKING:
 
 class AbsenceType(Enum):
     absence = "A"
+    exit = "U"
     # TODO: find out other event codes
     # THIS MIGHT BREAK UNTIL COMPLETED
 
