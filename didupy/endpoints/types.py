@@ -1,4 +1,4 @@
-from typing import Any, TypedDict, Literal
+from typing import Any, TypedDict, Literal, Optional
 
 
 ArgoRequestHeaders = TypedDict(
@@ -154,11 +154,13 @@ class MediaMateria(TypedDict):
 class Periodo(TypedDict):
     pkPeriodo: str
     dataInizio: str
+    datInizio: Optional[str]
     descrizione: str
     votoUnico: bool
     mediaScrutinio: float
     isMediaScrutinio: bool
     dataFine: str
+    datFine: Optional[str]
     codPeriodo: str
     isScrutinioFinale: bool
 

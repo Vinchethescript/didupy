@@ -360,12 +360,12 @@ class Dashboard:
             Period(
                 dashboard=self,
                 pk=period["pkPeriodo"],
-                start_date=date.fromisoformat(period["dataInizio"]),
+                start_date=date.fromisoformat(period.get("datInizio") or period.get("dataInizio")),
                 name=period["descrizione"],
                 one_grade=period["votoUnico"],
                 avg=period["mediaScrutinio"],
                 is_avg=period["isMediaScrutinio"],
-                end_date=date.fromisoformat(period["dataFine"]),
+                end_date=date.fromisoformat(period.get("datFine") or period.get("dataFine")),
                 code=period["codPeriodo"],
                 is_final=period["isScrutinioFinale"],
             )
