@@ -407,6 +407,7 @@ class Dashboard:
                     description=grd["descrizioneProva"],
                     comment=grd["desCommento"],
                     teacher=teacher,
+                    counts_towards_avg=bool(grd["numMedia"]),
                 )
             )
 

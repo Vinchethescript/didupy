@@ -304,7 +304,7 @@ class Grade(CommonObject):
     date: Date
     """Date of the grade (might be different from created_at)"""
 
-    # find out what numMedia means
+    counts_towards_avg: bool
 
     def __repr__(self) -> str:
         return _make_repr(
