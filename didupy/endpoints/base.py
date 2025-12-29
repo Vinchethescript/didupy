@@ -22,7 +22,7 @@ class Endpoints:
         return content  #  type: ignore
 
     async def dashboard(self) -> DashboardResponse:
-        now = datetime.now(timezone("Europe/Rome"))
+        now = datetime(1970, 1, 1, 0, 0, 0, tzinfo=timezone("Europe/Rome"))
         content, _ = await self.client.request(
             "POST",
             "dashboard/dashboard",
