@@ -561,7 +561,7 @@ class Dashboard:
         self.__shared_files = [
             SharedFile(
                 pk=f["pk"],
-                file=f["fileAlunnoScollegato"],
+                file=f["file"],
                 date=date.fromisoformat(f["data"]),
                 message=f["messaggio"],
                 folder=f["cartella"],
