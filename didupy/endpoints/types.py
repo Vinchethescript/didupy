@@ -340,7 +340,7 @@ class DashboardResponseDatum(CommonData):
     opzioni: list[Opzione]
     mediaGenerale: float
     mediaPerMese: dict[str, float]
-    mediaPerPeriodo: dict[str, float]
+    mediaPerPeriodo: dict[str, dict] # to be typed better
     mediaMaterie: dict[str, MediaMateria]
     listaMaterie: list[Materia]
     rimuoviDatiLocali: bool

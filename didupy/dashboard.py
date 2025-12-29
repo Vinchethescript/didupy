@@ -18,7 +18,9 @@ from .dataclasses import (
     DayEvent,
     HomeworkAssigned,
     Day,
-    PartialTeacher
+    PartialTeacher,
+    OutOfClass,
+    SharedFile
 )
 from .endpoints.types import (
     BachecaEntry,
@@ -112,8 +114,6 @@ class InboxItem:
             ItemAttachment(client, att) for att in data["listaAllegati"]
         ]
 
-        self.__homework = None
-
     @property
     def pk(self) -> str:
         return self.__data["pk"]
@@ -191,8 +191,10 @@ class Dashboard:
         self.__inbox = None
         self.__reminders = None
         self.__absences = None
+        self.__out_of_class = None
         self.__homework = None
         self.__register = None
+        self.__shared_files = None
 
     def _get_subject(self, pk: str, data: Optional[DashboardResponseDatum] = None):
         if data is None or self.__subjects is None:
@@ -544,6 +546,32 @@ class Dashboard:
 
         self.__register.sort(key=lambda x: x.date)
 
+        self.__out_of_class = [
+            OutOfClass(
+                pk=evt["pk"],
+                date=date.fromisoformat(evt["data"]),
+                note=evt["nota"],
+                teacher_name=evt["docente"],
+                description=evt["descrizione"],
+                online=evt["frequenzaOnLine"],
+            )
+            for evt in data.get("fuoriClasse", [])
+        ]
+
+        self.__shared_files = [
+            SharedFile(
+                pk=f["pk"],
+                file=f["fileAlunnoScollegato"],
+                date=date.fromisoformat(f["data"]),
+                message=f["messaggio"],
+                folder=f["cartella"],
+                teacher=self._get_teacher(f["pkDocente"], data),
+                attachments=f["listaAllegati"], # temporary
+                url=f["url"],
+            )
+            for f in data.get("fileCondivisi", {}).get("listaFile", [])
+        ]
+
         return self
 
     @property
@@ -604,9 +632,11 @@ class Dashboard:
         return self.__reminders
 
     @property
-    def shared_files(self) -> list:
-        # fileCondivisi
-        raise NotImplementedError
+    def shared_files(self) -> list[SharedFile]:
+        if self.__shared_files is None:
+            raise ValueError("Dashboard data not filled. Log in first.")
+
+        return self.__shared_files
 
     @property
     def grades(self) -> list[Grade]:
@@ -628,6 +658,13 @@ class Dashboard:
             raise ValueError("Dashboard data not filled. Log in first.")
 
         return self.__absences
+
+    @property
+    def out_of_class_events(self) -> list[OutOfClass]:
+        if self.__out_of_class is None:
+            raise ValueError("Dashboard data not filled. Log in first.")
+
+        return self.__out_of_class
 
     @property
     def homework(self) -> list[HomeworkAssigned]:

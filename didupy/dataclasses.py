@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from enum import Enum
 from dataclasses import dataclass
-from typing import Tuple
+from typing import Tuple, Any
 from datetime import date as Date, time
 from typing import Union, Optional, Sequence, TYPE_CHECKING
 
@@ -369,6 +369,13 @@ class AbsenceEvent(CommonObject):
             justification=self.justification,
         )
 
+@dataclass(frozen=True)
+class OutOfClass(CommonObject):
+    date: Date
+    note: str
+    teacher_name: str
+    description: str
+    online: bool
 
 @dataclass(frozen=True)
 class HomeworkAssigned:
@@ -430,6 +437,16 @@ class Day:
             events=self.events,
             homework=self.homework,
         )
+    
+@dataclass(frozen=True)
+class SharedFile(CommonObject):
+    file: Any # just give this directly for now
+    date: Date
+    message: str
+    folder: str
+    teacher: Teacher
+    attachments: list # to implement
+    url: str
 
 
 SubjectType = Union[Subject, PartialSubject]
