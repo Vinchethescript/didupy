@@ -565,7 +565,7 @@ class Dashboard:
                 date=date.fromisoformat(f["data"]),
                 message=f["messaggio"],
                 folder=f["cartella"],
-                teacher=self._get_teacher(f["pkDocente"], data),
+                teacher=self._get_teacher(f["docente"]["pk"], data),
                 attachments=f["listaAllegati"], # temporary
                 url=f["url"],
             )
