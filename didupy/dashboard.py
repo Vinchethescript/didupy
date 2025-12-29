@@ -660,7 +660,7 @@ class Dashboard:
         return self.__absences
 
     @property
-    def out_of_class_events(self) -> list[OutOfClass]:
+    def out_of_class(self) -> list[OutOfClass]:
         if self.__out_of_class is None:
             raise ValueError("Dashboard data not filled. Log in first.")
 
