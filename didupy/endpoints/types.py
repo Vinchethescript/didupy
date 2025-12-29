@@ -25,6 +25,9 @@ class ArgoResponse(ArgoResponseBase):
 class CommonData(TypedDict):
     pk: str
 
+class CommonEvent(CommonData):
+    operazione: str
+    datEvento: str
 
 # ======== Profilo ========
 
@@ -172,8 +175,7 @@ class BachecaAllegato(CommonData):
     url: str
 
 
-class BachecaEntry(CommonData):
-    datEvento: str
+class BachecaEntry(CommonEvent):
     messaggio: str
     data: str
     pvRichiesta: bool
@@ -182,7 +184,6 @@ class BachecaEntry(CommonData):
     url: None | str
     autore: str
     dataScadenza: str
-    operazione: str
     adRichiesta: bool
     isPresaVisione: bool
     dataConfermaAdesione: str
@@ -191,16 +192,34 @@ class BachecaEntry(CommonData):
     isPresaAdesioneConfermata: bool
 
 
+class CommonDocente(CommonData):
+    desCognome: str
+    desNome: str
+
+
+class DocenteClasse(CommonDocente):
+    materie: list[str]
+    desEmail: str
+
+
+class DocenteFileCondiviso(CommonDocente):
+    docente: str
+
+
+class FileCondiviso(CommonData):
+    operazione: str
+    file: Any # to be typed
+    data: str
+    messaggio: str
+    cartella: str
+    listaFileAlunni: list
+    docente: DocenteFileCondiviso
+    listaAllegati: list
+    url: str
+
 class FileCondivisi(TypedDict):
     fileAlunniScollegati: list
     listaFile: list
-
-
-class DocenteClasse(CommonData):
-    desCognome: str
-    materie: list[str]
-    desNome: str
-    desEmail: str
 
 
 class Autocert(TypedDict):
@@ -222,13 +241,11 @@ class Compito(TypedDict):
     dataConsegna: str
 
 
-class RegistroEntry(CommonData):
-    datEvento: str
+class RegistroEntry(CommonEvent):
     isFirmato: bool
     compiti: list[Compito]
     docente: str
     pkMateria: str
-    operazione: str
     desUrl: None | str
     pkDocente: str
     datGiorno: str
@@ -237,23 +254,23 @@ class RegistroEntry(CommonData):
     ora: int
 
 
-class AppelloEntry(CommonData):
-    operazione: str
-    datEvento: str
+class EventEntry(CommonEvent):
     descrizione: str
-    daGiustificare: bool
-    giustificata: str
     data: str
-    codEvento: str
     docente: str
-    commentoGiustificazione: str
-    dataGiustificazione: str
     nota: str
 
+class AppelloEntry(EventEntry):
+    daGiustificare: bool
+    giustificata: str
+    codEvento: str
+    commentoGiustificazione: str
+    dataGiustificazione: str
 
-class Promemoria(CommonData):
-    operazione: str
-    datEvento: str
+class FuoriClasseEntry(EventEntry):
+    frequenzaOnLine: bool
+
+class Promemoria(CommonEvent):
     desAnnotazioni: str
     pkDocente: str
     flgVisibileFamiglia: str
@@ -295,8 +312,7 @@ class MateriaLight(TypedDict):
     idmateria: str
 
 
-class Voto(CommonData):
-    datEvento: str
+class Voto(CommonEvent):
     pkPeriodo: str
     codCodice: str
     valore: float
@@ -305,7 +321,6 @@ class Voto(CommonData):
     pkMateria: str
     tipoValutazione: None | str
     prgVoto: int
-    operazione: str
     descrizioneProva: str
     faMenoMedia: str
     pkDocente: str
@@ -320,7 +335,7 @@ class Voto(CommonData):
 
 
 class DashboardResponseDatum(CommonData):
-    fuoriClasse: list
+    fuoriClasse: list[FuoriClasseEntry]
     msg: str
     opzioni: list[Opzione]
     mediaGenerale: float
