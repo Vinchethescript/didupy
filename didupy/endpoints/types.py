@@ -25,9 +25,11 @@ class ArgoResponse(ArgoResponseBase):
 class CommonData(TypedDict):
     pk: str
 
+
 class CommonEvent(CommonData):
     operazione: str
     datEvento: str
+
 
 # ======== Profilo ========
 
@@ -208,7 +210,7 @@ class DocenteFileCondiviso(CommonDocente):
 
 class FileCondiviso(CommonData):
     operazione: str
-    file: Any # to be typed
+    file: Any  # to be typed
     data: str
     messaggio: str
     cartella: str
@@ -216,6 +218,7 @@ class FileCondiviso(CommonData):
     docente: DocenteFileCondiviso
     listaAllegati: list
     url: str
+
 
 class FileCondivisi(TypedDict):
     fileAlunniScollegati: list
@@ -260,6 +263,7 @@ class EventEntry(CommonEvent):
     docente: str
     nota: str
 
+
 class AppelloEntry(EventEntry):
     daGiustificare: bool
     giustificata: str
@@ -267,8 +271,10 @@ class AppelloEntry(EventEntry):
     commentoGiustificazione: str
     dataGiustificazione: str
 
+
 class FuoriClasseEntry(EventEntry):
     frequenzaOnLine: bool
+
 
 class Promemoria(CommonEvent):
     desAnnotazioni: str
@@ -334,13 +340,19 @@ class Voto(CommonEvent):
     desCommento: str
 
 
+class MediaPerPeriodo(TypedDict):
+    mediaGenerale: float
+    listaMaterie: dict[str, MediaMateria]
+    mediaMese: dict[str, float]
+
+
 class DashboardResponseDatum(CommonData):
     fuoriClasse: list[FuoriClasseEntry]
     msg: str
     opzioni: list[Opzione]
     mediaGenerale: float
     mediaPerMese: dict[str, float]
-    mediaPerPeriodo: dict[str, dict] # to be typed better
+    mediaPerPeriodo: dict[str, MediaPerPeriodo]
     mediaMaterie: dict[str, MediaMateria]
     listaMaterie: list[Materia]
     rimuoviDatiLocali: bool

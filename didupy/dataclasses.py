@@ -141,9 +141,11 @@ class DashboardOptions(ProfileOptions):
     asl: bool
     wsm: bool
 
+
 @dataclass(frozen=True)
 class PartialTeacher(CommonObject):
     name: str
+
 
 @dataclass(frozen=True)
 class Teacher(CommonObject):
@@ -211,6 +213,26 @@ class PartialSubject(CommonObject):
 
         return ret
 
+    def average_for_period(
+        self, period: Union["Period", str]
+    ) -> Optional[SubjectAverages]:
+        if isinstance(period, str):
+            per = next(
+                (
+                    p
+                    for p in self.dashboard.periods
+                    if p.pk == period or p.code == period
+                ),
+                None,
+            )
+        else:
+            per = period
+
+        if per is None:
+            return None
+
+        return per.subject_averages.get(self.pk)
+
 
 @dataclass(frozen=True)
 class Subject(PartialSubject):
@@ -245,6 +267,9 @@ class Period(CommonObject):
     end_date: Date
     code: str
     is_final: bool
+    average: float
+    monthly_averages: dict[str, float]
+    subject_averages: dict[str, SubjectAverages]
     dashboard: "Dashboard"
 
     @property
@@ -279,6 +304,16 @@ class Period(CommonObject):
         full = self.dashboard.register
 
         return [day for day in full if day.period.pk == self.pk]
+
+    def get_subject_average(
+        self, subject: Union[SubjectType, str]
+    ) -> Optional[SubjectAverages]:
+        if isinstance(subject, (Subject, PartialSubject)):
+            key = subject.pk
+        else:
+            key = subject
+
+        return self.subject_averages.get(key)
 
 
 @dataclass(frozen=True)
@@ -369,6 +404,7 @@ class AbsenceEvent(CommonObject):
             justification=self.justification,
         )
 
+
 @dataclass(frozen=True)
 class OutOfClass(CommonObject):
     date: Date
@@ -376,6 +412,7 @@ class OutOfClass(CommonObject):
     teacher_name: str
     description: str
     online: bool
+
 
 @dataclass(frozen=True)
 class HomeworkAssigned:
@@ -437,15 +474,16 @@ class Day:
             events=self.events,
             homework=self.homework,
         )
-    
+
+
 @dataclass(frozen=True)
 class SharedFile(CommonObject):
-    file: Any # just give this directly for now
+    file: Any  # just give this directly for now
     date: Date
     message: str
     folder: str
     teacher: Teacher
-    attachments: list # to implement
+    attachments: list  # to implement
     url: str
 
 

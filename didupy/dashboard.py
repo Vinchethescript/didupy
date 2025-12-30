@@ -1,6 +1,6 @@
 import io
 from datetime import date, time
-from typing import Union, BinaryIO, Optional
+from typing import Union, BinaryIO, Optional, Any
 from .dataclasses import (
     DashboardOptions,
     Period,
@@ -20,7 +20,7 @@ from .dataclasses import (
     Day,
     PartialTeacher,
     OutOfClass,
-    SharedFile
+    SharedFile,
 )
 from .endpoints.types import (
     BachecaEntry,
@@ -316,11 +316,8 @@ class Dashboard:
 
         teacher = list(filter(lambda x: x["pk"] == pk, data["listaDocentiClasse"]))
         if not teacher:
-            return PartialTeacher(
-                pk=pk,
-                name="Unknown"
-            ) # to be typed properly
-            #raise ValueError(f"Teacher with pk {pk} not found")
+            return PartialTeacher(pk=pk, name="Unknown")  # to be typed properly
+            # raise ValueError(f"Teacher with pk {pk} not found")
 
         teacher = teacher[0]
         subjects = []
@@ -358,21 +355,50 @@ class Dashboard:
 
         data = self.__data  # for easier access
 
-        self.__periods = [
-            Period(
-                dashboard=self,
-                pk=period["pkPeriodo"],
-                start_date=date.fromisoformat(period.get("datInizio") or period.get("dataInizio")),
-                name=period["descrizione"],
-                one_grade=period["votoUnico"],
-                avg=period["mediaScrutinio"],
-                is_avg=period["isMediaScrutinio"],
-                end_date=date.fromisoformat(period.get("datFine") or period.get("dataFine")),
-                code=period["codPeriodo"],
-                is_final=period["isScrutinioFinale"],
+        self.__periods = []
+        for period in data["listaPeriodi"]:
+            avg = data.get("mediaPerPeriodo", {}).get(period["codPeriodo"], {})
+            self.__periods.append(
+                Period(
+                    dashboard=self,
+                    pk=period["pkPeriodo"],
+                    start_date=date.fromisoformat(
+                        period.get("datInizio") or period.get("dataInizio")
+                    ),
+                    name=period["descrizione"],
+                    one_grade=period["votoUnico"],
+                    avg=period["mediaScrutinio"],
+                    is_avg=period["isMediaScrutinio"],
+                    end_date=date.fromisoformat(
+                        period.get("datFine") or period.get("dataFine")
+                    ),
+                    code=period["codPeriodo"],
+                    is_final=period["isScrutinioFinale"],
+                    average=avg.get("mediaGenerale", 0.0),
+                    monthly_averages=avg.get("mediaMese", {}),
+                    subject_averages={
+                        subj_pk: SubjectAverages(
+                            oral=SubjectGrades(
+                                sum=avg.get("sommaValutazioniOrale", 0.0),
+                                num=avg.get("numValutazioniOrale", 0),
+                                avg=avg.get("mediaOrale", 0.0),
+                            ),
+                            written=SubjectGrades(
+                                sum=avg.get("sommaValutazioniScritto", 0.0),
+                                num=avg.get("numValutazioniScritto", 0),
+                                avg=avg.get("mediaScritta", 0.0),
+                            ),
+                            total=SubjectGrades(
+                                sum=avg.get("sumValori", 0.0),
+                                num=avg.get("numValori", 0),
+                                avg=avg.get("mediaMateria", 0.0),
+                            ),
+                            grades=avg.get("numVoti", 0),
+                        )
+                        for subj_pk, avg in avg.get("listaMaterie", {}).items()
+                    },
+                )
             )
-            for period in data["listaPeriodi"]
-        ]
 
         self.__teachers = []
         self.__subjects = []
@@ -394,18 +420,23 @@ class Dashboard:
             period = list(filter(lambda x: x.pk == grd["pkPeriodo"], self.periods))
             if not period:
                 # i don't know why but argo DOES send grades with unknown periods
-                period = [Period(
-                    dashboard=self,
-                    pk=grd["pkPeriodo"],
-                    start_date=date.fromisoformat("1970-01-01"),
-                    name="Unknown",
-                    one_grade=False,
-                    avg=0.0,
-                    is_avg=False,
-                    end_date=date.fromisoformat("1970-01-01"),
-                    code="UNK",
-                    is_final=False,
-                )]
+                period = [
+                    Period(
+                        dashboard=self,
+                        pk=grd["pkPeriodo"],
+                        start_date=date.fromisoformat("1970-01-01"),
+                        name="Unknown",
+                        one_grade=False,
+                        avg=0.0,
+                        is_avg=False,
+                        end_date=date.fromisoformat("1970-01-01"),
+                        code="UNK",
+                        is_final=False,
+                        average=0.0,
+                        monthly_averages={},
+                        subject_averages={},
+                    )
+                ]
                 self.__periods += period
 
             self.__grades.append(
@@ -578,7 +609,7 @@ class Dashboard:
                 message=f["messaggio"],
                 folder=f["cartella"],
                 teacher=self._get_teacher(f["docente"]["pk"], data),
-                attachments=f["listaAllegati"], # temporary
+                attachments=f["listaAllegati"],  # temporary
                 url=f["url"],
             )
             for f in data.get("fileCondivisi", {}).get("listaFile", [])
