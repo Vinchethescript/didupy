@@ -393,8 +393,20 @@ class Dashboard:
 
             period = list(filter(lambda x: x.pk == grd["pkPeriodo"], self.periods))
             if not period:
-                # this ain't happening anyway (????????????)
-                continue
+                # i don't know why but argo DOES send grades with unknown periods
+                period = [Period(
+                    dashboard=self,
+                    pk=grd["pkPeriodo"],
+                    start_date=date.fromisoformat("1970-01-01"),
+                    name="Unknown",
+                    one_grade=False,
+                    avg=0.0,
+                    is_avg=False,
+                    end_date=date.fromisoformat("1970-01-01"),
+                    code="UNK",
+                    is_final=False,
+                )]
+                self.__periods += period
 
             self.__grades.append(
                 Grade(
