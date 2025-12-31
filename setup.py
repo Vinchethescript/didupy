@@ -2,13 +2,12 @@ import os
 import re
 from setuptools import setup, find_packages
 
-packages = find_packages()
 
 with open("README.md", "r", encoding="utf-8") as f:
     long_desc = f.read()
 
 with open(
-    os.path.join(os.path.dirname(__file__), packages[0], "__init__.py"),
+    os.path.join(os.path.dirname(__file__), "didupy/__init__.py"),
     "r",
     encoding="utf-8",
 ) as f:
@@ -24,7 +23,7 @@ setup(
     name="didupy",
     long_description=long_desc,
     long_description_content_type="text/markdown",
-    packages=packages,
+    packages=find_packages("didupy"),
     install_requires=[
         "aiohttp",
         "pytz",

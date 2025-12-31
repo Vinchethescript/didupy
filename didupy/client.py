@@ -3,7 +3,7 @@ from typing import Optional, Mapping, Any, Iterable, Union, Self
 from urllib.parse import urljoin, urlsplit
 from datetime import datetime, timedelta
 from warnings import warn
-from asyncio import AbstractEventLoop
+from asyncio import AbstractEventLoop, Lock
 
 import aiohttp
 from aiohttp.client import (
@@ -40,7 +40,6 @@ class DidUPClient:
         username: str,
         password: str,
         app_version: str = ARGO_APP_VERSION,
-        loop: Optional[AbstractEventLoop] = None,
     ):
         self._session = None
         self.school_code = school_code
@@ -55,12 +54,12 @@ class DidUPClient:
         self.__me = None
         self.app_version = app_version
         self.__endpoints = None
-        self.loop = loop
+        self._login_lock = Lock()
 
     @property
     def session(self) -> aiohttp.ClientSession:
         if self._session is None or self._session.closed:
-            self._session = aiohttp.ClientSession(loop=self.loop)
+            self._session = aiohttp.ClientSession()
         return self._session
 
     @property
@@ -118,6 +117,10 @@ class DidUPClient:
         return self.__me
 
     async def login(self, handle_exc=False) -> bool:
+        async with self._login_lock:
+            return await self._login(handle_exc)
+
+    async def _login(self, handle_exc=False) -> bool:
         try:
             token, mobile_token = await self.__login.login(
                 school_code=self.school_code,
@@ -128,7 +131,7 @@ class DidUPClient:
             self.__login_response = token
             self.__token = token.get("access_token")
             self.__refresh_token = token.get("refresh_token")
-            self.__expires_in = None
+            self.__expires_in = token.get("expires_in", 0)
             self.__logged_in_at = datetime.now(timezone("Europe/Rome"))
             self.__endpoints = Endpoints(self)
             if not self.__me:
@@ -138,6 +141,13 @@ class DidUPClient:
 
             return True
         except Exception as e:
+            self.__token = None
+            self.__refresh_token = None
+            self.__login_response = None
+            self.__expires_in = None
+            self.__logged_in_at = None
+            self.__endpoints = None
+            self.__me = None
             if handle_exc:
                 return False
 
@@ -178,7 +188,7 @@ class DidUPClient:
         raise_for_status: bool = True,
         read_until_eof: bool = True,
         proxy: Optional[StrOrURL] = None,
-        timeout: Union[ClientTimeout, object] = sentinel,
+        timeout: Union[ClientTimeout, object] = ClientTimeout(total=10),
         verify_ssl: Optional[bool] = None,
         fingerprint: Optional[bytes] = None,
         ssl_context: Optional[SSLContext] = None,
@@ -193,13 +203,13 @@ class DidUPClient:
         except ValueError:
             await self.login()
         else:
-            if (
-                self.me is None
-                or self.token is None
-                or self.expires_at is None
-                or datetime.now(timezone("Europe/Rome")) >= self.expires_at
-            ):
-                await self.login()
+            async with self._login_lock:
+                if (
+                    self.token is None
+                    or self.expires_at is None
+                    or datetime.now(timezone("Europe/Rome")) >= self.expires_at
+                ):
+                    await self._login()
 
         if not endpoint.startswith(self.BASE_URL):
             if urlsplit(endpoint).scheme:

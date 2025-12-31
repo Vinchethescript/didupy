@@ -153,7 +153,7 @@ class ArgoLoginHandler:
         )
 
     async def mobile_login(self, token: str) -> DidUPyResponse:
-        return await self.request(
+        ret, resp = await self.request(
             "POST",
             "https://www.portaleargo.it/appfamiglia/api/rest/login",
             headers={
@@ -168,6 +168,10 @@ class ArgoLoginHandler:
                 "clientID": MOBILE_CLIENT_ID,
             },
         )
+        if resp.status != 200:
+            raise DidUPyError(f"Mobile login failed: {resp.status}")
+
+        return (ret, resp)
 
     async def login(
         self, school_code: str, username: str, password: str

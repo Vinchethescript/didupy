@@ -73,12 +73,14 @@ class ItemAttachment:
 
         url = await self.get_download_url()
 
-        # BROKEN: seems like this is always returning a 403 for some reason
-        async with self.__client.session.get(url) as response:
-            response.raise_for_status()
+        # FIXME: seems like this is returning a 403 in a few cases
+        try:
+            async with self.__client.session.get(url) as response:
+                response.raise_for_status()
 
-            data = await response.read()
-            fp.write(data)
+                data = await response.read()
+                fp.write(data)
+        finally:
             if should_close:
                 fp.close()
 
@@ -468,7 +470,7 @@ class Dashboard:
 
         kwargs = {}
         opts = {}
-        annotations = DashboardOptions.__annotations__
+        annotations = DashboardOptions.__annotations__.copy()
         for b in DashboardOptions.__bases__:
             annotations.update(b.__annotations__)
 
@@ -562,6 +564,9 @@ class Dashboard:
 
         for r in self.reminders:
             dates.add(r.date.isoformat())
+
+        for absence in self.absences:
+            dates.add(absence.date.isoformat())
 
         for _date in dates:
             date_ = date.fromisoformat(_date)

@@ -12,9 +12,8 @@ if TYPE_CHECKING:
 
 class AbsenceType(Enum):
     absence = "A"
+    late = "I"
     exit = "U"
-    # TODO: find out other event codes
-    # THIS MIGHT BREAK UNTIL COMPLETED
 
 
 def _make_repr(self, **kwargs) -> str:
@@ -92,54 +91,54 @@ class UserData(CommonObject):
 
 @dataclass(frozen=True)
 class ProfileOptions:
-    orario_scolastico: bool
-    pagellino_online: bool
-    abilita_preautorizzazioni_fam: bool
-    valutazioni_periodiche: bool
-    abilita_pcto: bool
-    visualizza_nota_valutazione: bool
-    valutazioni_giornaliere: bool
-    compiti_assegnati: bool
-    ignora_opzione_voti_docenti: bool
-    docenti_classe: bool
-    recupero_debito_sf: bool
-    rendi_visibile_curriculum: bool
-    richiesta_certificati: bool
-    modifica_recapiti: bool
-    abilita_giustific_maggiorenni: bool
-    consiglio_di_istituto: bool
-    note_disciplinari: bool
-    abilita_mensa: bool
-    giudizi: bool
-    abilita_pfi: bool
-    mostra_media_materia: bool
-    giustificazioni_assenze: bool
-    tabellone_periodi_intermedi: bool
-    pagelle_online: bool
-    assenze_per_data: bool
-    valutazioni_sospese_periodiche: bool
-    argomenti_lezione: bool
-    nascondi_didup_famiglia: bool
-    alilita_bsmart_famiglia: bool
-    voti_giudizi: bool
-    recupero_debito_int: bool
-    abilita_autocertificazione_fam: bool
-    mostra_media_generale: bool
-    tabellone_scrutinio_finale: bool
-    pin_voti: bool
-    disabilita_accesso_famiglia: bool
-    tasse_scolastiche: bool
-    promemoria_classe: bool
-    prenotazione_alunni: bool
-    consiglio_di_classe: bool
+    orario_scolastico: bool = False
+    pagellino_online: bool = False
+    abilita_preautorizzazioni_fam: bool = False
+    valutazioni_periodiche: bool = False
+    abilita_pcto: bool = False
+    visualizza_nota_valutazione: bool = False
+    valutazioni_giornaliere: bool = False
+    compiti_assegnati: bool = False
+    ignora_opzione_voti_docenti: bool = False
+    docenti_classe: bool = False
+    recupero_debito_sf: bool = False
+    rendi_visibile_curriculum: bool = False
+    richiesta_certificati: bool = False
+    modifica_recapiti: bool = False
+    abilita_giustific_maggiorenni: bool = False
+    consiglio_di_istituto: bool = False
+    note_disciplinari: bool = False
+    abilita_mensa: bool = False
+    giudizi: bool = False
+    abilita_pfi: bool = False
+    mostra_media_materia: bool = False
+    giustificazioni_assenze: bool = False
+    tabellone_periodi_intermedi: bool = False
+    pagelle_online: bool = False
+    assenze_per_data: bool = False
+    valutazioni_sospese_periodiche: bool = False
+    argomenti_lezione: bool = False
+    nascondi_didup_famiglia: bool = False
+    alilita_bsmart_famiglia: bool = False
+    voti_giudizi: bool = False
+    recupero_debito_int: bool = False
+    abilita_autocertificazione_fam: bool = False
+    mostra_media_generale: bool = False
+    tabellone_scrutinio_finale: bool = False
+    pin_voti: bool = False
+    disabilita_accesso_famiglia: bool = False
+    tasse_scolastiche: bool = False
+    promemoria_classe: bool = False
+    prenotazione_alunni: bool = False
+    consiglio_di_classe: bool = False
 
 
 @dataclass(frozen=True)
 class DashboardOptions(ProfileOptions):
-    invalsi: bool
-    pfi: bool
-    asl: bool
-    wsm: bool
+    invalsi: bool = False
+    pfi: bool = False
+    asl: bool = False
+    wsm: bool = False
 
 
 @dataclass(frozen=True)

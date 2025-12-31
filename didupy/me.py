@@ -100,7 +100,7 @@ class Me:
 
     @property
     def token(self) -> str:
-        if self.__mobile_token is None:
+        if not self.__mobile_token:
             raise ValueError("Profile data not filled. Log in first.")
 
         return self.__mobile_token
