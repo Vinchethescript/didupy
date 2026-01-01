@@ -203,13 +203,12 @@ class DidUPClient:
         except ValueError:
             await self.login()
         else:
-            async with self._login_lock:
-                if (
-                    self.token is None
-                    or self.expires_at is None
-                    or datetime.now(timezone("Europe/Rome")) >= self.expires_at
-                ):
-                    await self._login()
+            if (
+                self.token is None
+                or self.expires_at is None
+                or datetime.now(timezone("Europe/Rome")) >= self.expires_at
+            ):
+                await self.login()
 
         if not endpoint.startswith(self.BASE_URL):
             if urlsplit(endpoint).scheme:
