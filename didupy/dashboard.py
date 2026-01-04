@@ -568,6 +568,9 @@ class Dashboard:
         for absence in self.absences:
             dates.add(absence.date.isoformat())
 
+        for hw in self.homework:
+            dates.add(hw.due_date.isoformat())
+
         for _date in dates:
             date_ = date.fromisoformat(_date)
             period = list(
