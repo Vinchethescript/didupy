@@ -23,7 +23,7 @@ setup(
     name="didupy",
     long_description=long_desc,
     long_description_content_type="text/markdown",
-    packages=find_packages("didupy"),
+    packages=find_packages("didupy.*"),
     install_requires=[
         "aiohttp",
         "pytz",
