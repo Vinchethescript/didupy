@@ -427,7 +427,7 @@ class Dashboard:
                         dashboard=self,
                         pk=grd["pkPeriodo"],
                         start_date=date.fromisoformat("1970-01-01"),
-                        name="Unknown",
+                        name=grd["pkPeriodo"],
                         one_grade=False,
                         avg=0.0,
                         is_avg=False,

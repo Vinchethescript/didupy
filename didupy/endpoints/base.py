@@ -35,14 +35,13 @@ class Endpoints:
     async def presa_visione_adesione(
         self, pk: str, presa_visione: bool
     ) -> PresaVisioneAdesioneResponse:
-        # TODO: find out what the response of this endpoint is
         content, _ = await self.client.request(
             "POST",
             "presavisioneadesione",
             json={
                 "prgMessaggio": pk,
                 "presaVisione": "S" if presa_visione else "N",
-            },  # type: ignore
+            },
         )
         return content  #  type: ignore
 
@@ -65,7 +64,7 @@ class Endpoints:
 
         return content  # type: ignore
 
-    async def colloqui(self) -> dict:
+    async def ricevimento(self) -> dict:
         # to be typed
         content, _ = await self.client.request("POST", "ricevimento", json={})
         return content  # type: ignore
